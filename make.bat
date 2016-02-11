@@ -1,7 +1,7 @@
 @echo off 
 @setlocal
 
-pushd "Z:/FRC/Repositories/2016_Robot"
+pushd "C:/Users/yuxua_000/Desktop/2016Robot"
 
 IF "%~1"=="-u" (
 	CALL DeployEngine.bat
