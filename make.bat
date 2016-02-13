@@ -1,7 +1,8 @@
 @echo off 
 @setlocal
 
-pushd "C:/Users/yuxua_000/Desktop/2016Robot"
+REM Put your project location here
+pushd "Z:/FRC/Repositories/2016_Robot/make.bat"
 
 IF "%~1"=="-u" (
 	CALL DeployEngine.bat

@@ -50,5 +50,6 @@ id_rsa.pub
 *.sublime-project
 *.sublime-workspace
 make.bat
+Build.bat
 
 
