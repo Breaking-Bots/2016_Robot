@@ -1,0 +1,349 @@
+#include "CHRISTOPHEngine.h"
+
+/* CHRISTOPH Engine */
+
+uul_extern {
+
+CHRISTOPH_CALLBACK(SingleControllerInputControlledCallback){
+	CHRISTOPHState* state = scast<CHRISTOPHState*>(memory->permanentStorage);
+	ChassisState* chassisState = &(state->chassisState);
+	ShooterState* shooterState = &(state->shooterState);
+
+	if(!memory->isInitialized){
+		for(U32 i = 0; i < NUM_TIMERS; i++){
+			state->timers[i] = {};
+		}
+		chassisState->chassisMagnitude = DEF_SPEED;
+		memory->isInitialized = True;
+	}
+
+	Gamepad* gamepad = GetGamepad(input, 0);
+
+	//Input processing
+	F32 lx = Analog(gamepad, _LX);
+	F32 ly = Analog(gamepad, _LY);
+	F32 rx = Analog(gamepad, _RX);
+	F32 ry = Analog(gamepad, _RY);
+	F32 lt = Analog(gamepad, _LT);
+	F32 rt = Analog(gamepad, _RT);
+
+	//memory->Cout("%.4f", rt - lt);
+
+	if(SufficientTimeElapsed(memory, 1) && SufficientTimeElapsed(memory, 2)){
+		SetShooterMotors(memory, rt - lt, rt - lt, rt - lt);
+
+		if(Button(gamepad, _RB)){
+			SetShooterMotors(memory, OUTER_INTAKE_SPEED, INNER_INTAKE_SPEED, SHOOTER_INTAKE_SPEED);
+		}
+		if(ButtonTapped(gamepad, _LB)){
+			StartTimer(memory, 0, DRAWBACK_TIME);
+		}
+		if(!SufficientTimeElapsed(memory, 0)){
+			SetShooterMotors(memory, 0.0f, DRAWBACK_SPEED, DRAWBACK_SPEED);
+			//memory->Cout("wow");
+		}
+	}
+	if(SufficientTimeElapsed(memory, 0)){
+		if(ButtonTapped(gamepad, _A) && SufficientTimeElapsed(memory, 2)){
+			StartTimer(memory, 1, SPIN_UP_TIME);
+		}	
+
+		if(!SufficientTimeElapsed(memory, 1)){
+			SetShooterMotors(memory, 0.0f, 0.0f, SHOOTER_SPEED);
+		}
+
+		if(TimerEnded(memory, 1)){
+			StartTimer(memory, 2, FOLLOW_THROUGH_TIME);
+		}
+
+		if(!SufficientTimeElapsed(memory, 2)){
+			SetShooterMotors(memory, 0.0f, SHOOTER_SPEED, SHOOTER_SPEED);
+		}
+
+	}
+}
+
+CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
+
+}
+
+CHRISTOPH_CALLBACK(InitTeleop){
+	memory->Cout("InitTeleop");
+}
+
+CHRISTOPH_CALLBACK(TeleopCallback){
+	#if NUM_GAMEPADS == 1
+		SingleControllerInputControlledCallback(memory, input, dt);
+	#elif NUM_GAMEPADS == 2
+		DoubleControllerInputControlledCallback(memory, input, dt);
+	#endif
+}
+
+CHRISTOPH_CALLBACK(InitTest){
+	memory->Cout("InitTest");
+}
+
+CHRISTOPH_CALLBACK(TestCallback){
+	#if NUM_GAMEPADS == 1
+		SingleControllerInputControlledCallback(memory, input, dt);
+	#elif NUM_GAMEPADS == 2
+		DoubleControllerInputControlledCallback(memory, input, dt);
+	#endif
+}
+
+CHRISTOPH_CALLBACK(InitAutonomous){
+	memory->Cout("InitAutonomous");
+}
+
+CHRISTOPH_CALLBACK(AutonomousCallback){
+
+}
+
+CHRISTOPH_CALLBACK(InitDisabled){
+	memory->Cout("InitDisabled");
+}
+
+CHRISTOPH_CALLBACK(DisabledCallback){
+	
+}
+
+/* Chassis */
+
+intern void SetLeftRightMotorValues(CHRISTOPHMemory* memory, F32 leftMgntd, F32 rightMgntd){
+	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(memory->permanentStorage);
+	ChassisState* state = &christophState->chassisState;
+	if(state->chassisEnabled){
+		state->motorValues[0] = memory->ClampN(leftMgntd * state->chassisMagnitude);
+		state->motorValues[1] = memory->ClampN(leftMgntd * state->chassisMagnitude);
+		state->motorValues[2] = memory->ClampN(-rightMgntd * state->chassisMagnitude);
+		state->motorValues[3] = memory->ClampN(-rightMgntd * state->chassisMagnitude);
+	}
+}
+
+intern void SetMotorValues(CHRISTOPHMemory* memory, F32 m0, F32 m1, F32 m2, F32 m3){
+	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(memory->permanentStorage);
+	ChassisState* state = &christophState->chassisState;
+	if(state->chassisEnabled){
+		state->motorValues[0] = memory->ClampN(m0 * state->chassisMagnitude);
+		state->motorValues[1] = memory->ClampN(m1 * state->chassisMagnitude);
+		state->motorValues[2] = memory->ClampN(-m2 * state->chassisMagnitude);
+		state->motorValues[3] = memory->ClampN(-m3 * state->chassisMagnitude);;
+	}
+}
+
+void RawDrive(CHRISTOPHMemory* memory, F32 mgntd, F32 curve){
+	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(memory->permanentStorage);
+	ChassisState* state = &christophState->chassisState;
+	if(curve < 0){
+		F32 value = logf(-curve);
+		F32 ratio = (value - state->sensitivity) / (value + state->sensitivity);
+		if(ratio == 0) {
+			ratio = EZERO;
+		}
+		SetLeftRightMotorValues(memory, mgntd/ratio, mgntd);
+	}else if(curve > 0){
+		F32 value = logf(curve);
+		F32 ratio = (value - state->sensitivity) / (value + state->sensitivity);
+		if(ratio == 0){
+			ratio = EZERO;
+		}
+		SetLeftRightMotorValues(memory, mgntd, mgntd/ratio);
+	}else{
+		SetLeftRightMotorValues(memory, mgntd, mgntd);
+	}
+}
+
+void TankDrive(CHRISTOPHMemory* memory, F32 leftMgntd, F32 rightMgntd){
+	SetLeftRightMotorValues(memory, leftMgntd, rightMgntd);
+}
+
+void CHRISTOPHDrive(CHRISTOPHMemory* memory, F32 fwdMgntd, F32 turnMgntd){
+	fwdMgntd = memory->ClampN(fwdMgntd);
+	turnMgntd = memory->ClampN(turnMgntd);
+	if(fwdMgntd > 0.0f){
+		if(turnMgntd > 0.0f){
+			SetLeftRightMotorValues(memory, fwdMgntd - turnMgntd, 
+									memory->Max(fwdMgntd, turnMgntd));
+		}else{
+			SetLeftRightMotorValues(memory, memory->Max(fwdMgntd, -turnMgntd),
+									fwdMgntd + turnMgntd);
+		}
+	}else{
+		if(turnMgntd > 0.0f){
+			SetLeftRightMotorValues(memory, -memory->Max(-fwdMgntd, turnMgntd),
+									fwdMgntd + turnMgntd);
+		}else{
+			SetLeftRightMotorValues(memory, fwdMgntd - turnMgntd, 
+									-memory->Max(-fwdMgntd, -turnMgntd));
+		}
+	}
+}
+
+void SetChassisMagnitude(CHRISTOPHMemory* memory, F32 magnitude){
+	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(memory->permanentStorage);
+	ChassisState* state = &christophState->chassisState;
+	state->chassisMagnitude = magnitude;
+}
+
+void EnableChassis(CHRISTOPHMemory* memory, B32 enable){
+	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(memory->permanentStorage);
+	ChassisState* state = &christophState->chassisState;
+	state->chassisEnabled = enable;
+}
+
+B32 IsChassisEnabled(CHRISTOPHMemory* memory){
+	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(memory->permanentStorage);
+	ChassisState* state = &christophState->chassisState;
+	return state->chassisEnabled;
+}
+
+void StopMotors(CHRISTOPHMemory* memory){
+	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(memory->permanentStorage);
+	ChassisState* state = &christophState->chassisState;
+	if(state->isInitialized){
+		for(U32 i = 0; i < state->nMotors; i++){
+			state->motorValues[i] = 0.0f;
+		}
+	}
+}
+
+void InvertChassisMotor(CHRISTOPHMemory* memory, U32 motorPort){
+	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(memory->permanentStorage);
+	ChassisState* state = &christophState->chassisState;
+	if(state->isInitialized){
+		state->invertedMotors[motorPort] *= -1;
+	}else{
+		memory->Cerr("Invalid port: %d.", motorPort);
+	}
+}
+
+/* Shooter */
+
+void SetShooterMotors(CHRISTOPHMemory* memory, F32 outSpeed, F32 inSpeed,
+					  F32 shotSpeed){
+	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(memory->permanentStorage);
+	ShooterState* state = &christophState->shooterState;
+	if(state->isInitialized){
+		state->outerIntakeValue = memory->ClampN(outSpeed);
+		state->innerLowerIntakeValue = memory->ClampN(inSpeed);
+		state->innerUpperIntakeValue = memory->ClampN(-inSpeed);
+		state->lowerShooterValue = memory->ClampN(shotSpeed);
+		state->upperShooterValue = memory->ClampN(-shotSpeed);
+	}
+}
+
+void InvertShooterMotor(CHRISTOPHMemory* memory, U32 motorPort){
+	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(memory->permanentStorage);
+	ShooterState* state = &christophState->shooterState;
+	if(state->isInitialized){
+		state->invertedMotors[motorPort] *= -1;
+	}else{
+		memory->Cerr("Invalid port: %d.", motorPort);
+	}
+}
+
+/* Util */
+
+void StartTimer(CHRISTOPHMemory* memory, U32 timerIndex, F32 targetSeconds){
+	CHRISTOPHState* state = scast<CHRISTOPHState*>(memory->permanentStorage);
+	if(!state->timers[timerIndex].isStarted){
+		state->timers[timerIndex].startTime = memory->SystemTime();
+		state->timers[timerIndex].targetSeconds = targetSeconds;
+		state->timers[timerIndex].isStarted = True;
+	}
+}
+
+B32 SufficientTimeElapsed(CHRISTOPHMemory* memory, U32 timerIndex){
+	CHRISTOPHState* state = scast<CHRISTOPHState*>(memory->permanentStorage);
+	if(state->timers[timerIndex].isStarted){
+		memory->Cout("qq");
+		if(state->timers[timerIndex].targetSeconds < 
+		   (memory->SystemTime() - state->timers[timerIndex].startTime) / 1000.0f){
+			state->timers[timerIndex].isStarted = False;
+			state->timers[timerIndex].endPulse = True;
+			return True;
+		}else{
+			return False;
+		}
+	}else{
+		return True;
+	}
+}
+
+B32 TimerEnded(CHRISTOPHMemory* memory, U32 timerIndex){
+	CHRISTOPHState* state = scast<CHRISTOPHState*>(memory->permanentStorage);
+	if(state->timers[timerIndex].endPulse){
+		state->timers[timerIndex].endPulse = False;
+		return true;
+	}else{
+		return False;
+	}
+}
+
+/* Input */
+
+U32 Buttons(Gamepad* gamepad){
+	U32 buttons = 0;
+	for(U32 i = 0; i < NUM_BUTTONS; i++){
+		buttons |= buttons & (gamepad->buttons[i].endedDown << i);
+	}
+	return buttons;
+}
+
+B32 Button(Gamepad* gamepad, U32 buttonIndex){
+	return (gamepad->buttons[buttonIndex].endedDown);
+}
+
+B32 ButtonTapped(Gamepad* gamepad, U32 buttonIndex){
+	return (gamepad->buttons[buttonIndex].endedDown && 
+			(gamepad->buttons[buttonIndex].halfTransitionCount));
+}
+
+B32 ButtonHeld(Gamepad* gamepad, U32 buttonIndex){
+	return (gamepad->buttons[buttonIndex].endedDown && 
+			!gamepad->buttons[buttonIndex].halfTransitionCount);
+}
+
+B32 ButtonReleased(Gamepad* gamepad, U32 buttonIndex){
+	return (!gamepad->buttons[buttonIndex].endedDown &&
+			(gamepad->buttons[buttonIndex].halfTransitionCount));
+}
+
+B32 ButtonPostRealeased(Gamepad* gamepad, U32 buttonIndex){
+	return (!gamepad->buttons[buttonIndex].endedDown && 
+			!gamepad->buttons[buttonIndex].halfTransitionCount);
+}
+
+B32 DPAD(Gamepad* gamepad, U32 dpadIndex){
+	return (gamepad->dpad[dpadIndex].endedDown);
+}
+
+B32 DPADTapped(Gamepad* gamepad, U32 dpadIndex){
+	return (gamepad->dpad[dpadIndex].endedDown && 
+			(gamepad->dpad[dpadIndex].halfTransitionCount));
+}
+
+B32 DPADHeld(Gamepad* gamepad, U32 dpadIndex){
+	return (gamepad->dpad[dpadIndex].endedDown && 
+			!gamepad->dpad[dpadIndex].halfTransitionCount);
+}
+
+B32 DPADReleased(Gamepad* gamepad, U32 dpadIndex){
+	return (!gamepad->dpad[dpadIndex].endedDown && 
+			(gamepad->dpad[dpadIndex].halfTransitionCount));
+}
+
+B32 DPADPostRealeased(Gamepad* gamepad, U32 dpadIndex){
+	return (!gamepad->dpad[dpadIndex].endedDown && 
+			!gamepad->dpad[dpadIndex].halfTransitionCount);
+}
+
+F32 Analog(Gamepad* gamepad, U32 stickIndex) {
+	return gamepad->analog[stickIndex];
+}
+
+/* Memory */
+
+
+
+}
