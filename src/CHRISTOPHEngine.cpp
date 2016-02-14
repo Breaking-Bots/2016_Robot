@@ -256,7 +256,6 @@ void StartTimer(CHRISTOPHMemory* memory, U32 timerIndex, F32 targetSeconds){
 B32 SufficientTimeElapsed(CHRISTOPHMemory* memory, U32 timerIndex){
 	CHRISTOPHState* state = scast<CHRISTOPHState*>(memory->permanentStorage);
 	if(state->timers[timerIndex].isStarted){
-		memory->Cout("qq");
 		if(state->timers[timerIndex].targetSeconds < 
 		   (memory->SystemTime() - state->timers[timerIndex].startTime) / 1000.0f){
 			state->timers[timerIndex].isStarted = False;
