@@ -27,10 +27,28 @@ CHRISTOPH_CALLBACK(SingleControllerInputControlledCallback){
 	F32 lt = Analog(gamepad, _LT);
 	F32 rt = Analog(gamepad, _RT);
 
-	//memory->Cout("%.4f", rt - lt);
+	S32 left = DPAD(gamepad, _LEFT);
+	S32 right = DPAD(gamepad, _RIGHT);
+
+	if(ButtonTapped(gamepad, _START)){
+		chassisState->chassisEnabled = !chassisState->chassisEnabled;
+	}
+
+	if(DPADTapped(gamepad, _DOWN)){
+		chassisState->tankDrive = !chassisState->tankDrive;
+	}
+
+	SetChassisMagnitude(memory, memory->SystemMagnitudeInterpolation(MIN_SPEED, DEF_SPEED,
+						MAX_SPEED, rt - lt));
+
+	if(chassisState->tankDrive){
+		TankDrive(memory, ly, ry);
+	}else{
+		CHRISTOPHDrive(memory, ly, rx);
+	}
 
 	if(SufficientTimeElapsed(memory, 1) && SufficientTimeElapsed(memory, 2)){
-		SetShooterMotors(memory, rt - lt, rt - lt, rt - lt);
+		SetShooterMotors(memory, right - left, right - left, right - left);
 
 		if(Button(gamepad, _RB)){
 			SetShooterMotors(memory, OUTER_INTAKE_SPEED, INNER_INTAKE_SPEED, SHOOTER_INTAKE_SPEED);
@@ -64,7 +82,83 @@ CHRISTOPH_CALLBACK(SingleControllerInputControlledCallback){
 }
 
 CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
+	CHRISTOPHState* state = scast<CHRISTOPHState*>(memory->permanentStorage);
+	ChassisState* chassisState = &(state->chassisState);
+	ShooterState* shooterState = &(state->shooterState);
 
+	if(!memory->isInitialized){
+		for(U32 i = 0; i < NUM_TIMERS; i++){
+			state->timers[i] = {};
+		}
+		chassisState->chassisMagnitude = DEF_SPEED;
+		memory->isInitialized = True;
+	}
+
+	Gamepad* driver = GetGamepad(input, 0);
+	Gamepad* shooter = GetGamepad(input, 1);
+
+	//Input processing
+	F32 dlx = Analog(driver, _LX);
+	F32 dly = Analog(driver, _LY);
+	F32 drx = Analog(driver, _RX);
+	F32 dry = Analog(driver, _RY);
+	F32 dlt = Analog(driver, _LT);
+	F32 drt = Analog(driver, _RT);
+	F32 slx = Analog(shooter, _LX);
+	F32 sly = Analog(shooter, _LY);
+	F32 srx = Analog(shooter, _RX);
+	F32 sry = Analog(shooter, _RY);
+	F32 slt = Analog(shooter, _LT);
+	F32 srt = Analog(shooter, _RT);
+
+	if(ButtonTapped(driver, _START)){
+		chassisState->chassisEnabled = !chassisState->chassisEnabled;
+	}
+
+	if(DPADTapped(driver, _DOWN)){
+		chassisState->tankDrive = !chassisState->tankDrive;
+	}
+
+	SetChassisMagnitude(memory, memory->SystemMagnitudeInterpolation(MIN_SPEED, DEF_SPEED,
+						MAX_SPEED, drt - dlt));
+
+	if(chassisState->tankDrive){
+		TankDrive(memory, dly, dry);
+	}else{
+		CHRISTOPHDrive(memory, dly, drx);
+	}
+
+	if(SufficientTimeElapsed(memory, 1) && SufficientTimeElapsed(memory, 2)){
+		SetShooterMotors(memory, srt - slt, srt - slt, srt - slt);
+
+		if(Button(shooter, _RB)){
+			SetShooterMotors(memory, OUTER_INTAKE_SPEED, INNER_INTAKE_SPEED, SHOOTER_INTAKE_SPEED);
+		}
+		if(ButtonTapped(shooter, _LB)){
+			StartTimer(memory, 0, DRAWBACK_TIME);
+		}
+		if(!SufficientTimeElapsed(memory, 0)){
+			SetShooterMotors(memory, 0.0f, DRAWBACK_SPEED, DRAWBACK_SPEED);
+		}
+	}
+	if(SufficientTimeElapsed(memory, 0)){
+		if(ButtonTapped(shooter, _A) && SufficientTimeElapsed(memory, 2)){
+			StartTimer(memory, 1, SPIN_UP_TIME);
+		}	
+
+		if(!SufficientTimeElapsed(memory, 1)){
+			SetShooterMotors(memory, 0.0f, 0.0f, SHOOTER_SPEED);
+		}
+
+		if(TimerEnded(memory, 1)){
+			StartTimer(memory, 2, FOLLOW_THROUGH_TIME);
+		}
+
+		if(!SufficientTimeElapsed(memory, 2)){
+			SetShooterMotors(memory, 0.0f, SHOOTER_SPEED, SHOOTER_SPEED);
+		}
+
+	}
 }
 
 CHRISTOPH_CALLBACK(InitTeleop){
