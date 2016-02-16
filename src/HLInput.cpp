@@ -22,8 +22,8 @@ intern void ProcessStickInput(F32* _x, F32* _y){
 		mgntd -= DEADZONE;
 		x = nlxFactor * mgntd;
 		y = nlyFactor * mgntd;
-		x = x / (1 - DEADZONE * nlxFactor);
-		y = y / (1 - DEADZONE * nlyFactor);
+		x = x / (1 - DEADZONE * nlxFactor * Sgn(x));
+		y = y / (1 - DEADZONE * nlyFactor * Sgn(y));
 	}
 
 	*_x = x;
@@ -100,5 +100,7 @@ void UpdateInput(DriverStation* ds, Input* newInput, Input* oldInput){
 		F32 rt = ds->GetStickAxis(i, _RT);
 		ProcessTriggerInput(&rt);
 		newGamepad->rt = rt;
+
+		//Cout("%.4f || %.4f || %.4f || %.4f", lx, ly, rx, ry);
 	}
 }

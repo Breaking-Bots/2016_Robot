@@ -48,6 +48,9 @@ void UpdateChassis(CHRISTOPHMemory* memory){
 	state->dRightEncoder = rightEncoderVal - state->rightEncoder;
 	state->rightEncoder = rightEncoderVal;
 
+	memory->Cout("%.4f || %.4f || %.4f|| %.4f", state->motorValues[0], 
+				 state->motorValues[1], state->motorValues[2], state->motorValues[3]);
+
 }
 
 void TerminateChassis(){
@@ -62,18 +65,18 @@ void TerminateChassis(){
 
 /* Shooter */
 
-VictorSP* outerIntakeMotor;
-Victor* innerLowerIntakeMotor;
-Victor* lowerShooterMotor;
-Victor* innerUpperIntakeMotor;
-Victor* upperShooterMotor;
+Talon* outerIntakeMotor;
+Talon* innerLowerIntakeMotor;
+VictorSP* lowerShooterMotor;
+Talon* innerUpperIntakeMotor;
+VictorSP* upperShooterMotor;
 
 void InitializeShooter(){
-	outerIntakeMotor = new VictorSP(SHOOTER_PORT_OI);
-	innerLowerIntakeMotor = new Victor(SHOOTER_PORT_ILI);
-	lowerShooterMotor = new Victor(SHOOTER_PORT_LS);
-	innerUpperIntakeMotor = new Victor(SHOOTER_PORT_IUI);
-	upperShooterMotor = new Victor(SHOOTER_PORT_US);
+	outerIntakeMotor = new Talon(SHOOTER_PORT_OI);
+	innerLowerIntakeMotor = new Talon(SHOOTER_PORT_ILI);
+	lowerShooterMotor = new VictorSP(SHOOTER_PORT_LS);
+	innerUpperIntakeMotor = new Talon(SHOOTER_PORT_IUI);
+	upperShooterMotor = new VictorSP(SHOOTER_PORT_US);
 	Cout("Shooter Initialized");
 }
 
@@ -86,10 +89,10 @@ void UpdateShooter(CHRISTOPHMemory* memory){
 		state->nMotors = SHOOTER_NUM_MOTORS;
 		
 		state->outerIntakeInversion = -1;
-		state->innerLowerIntakeInversion = 1;
-		state->innerUpperIntakeInversion = 1;
-		state->lowerShooterInversion = 1;
-		state->upperShooterInversion = 1;
+		state->innerLowerIntakeInversion = -1;
+		state->innerUpperIntakeInversion = -1;
+		state->lowerShooterInversion = -1;
+		state->upperShooterInversion = -1;
 	}
 
 	outerIntakeMotor->Set(state->outerIntakeValue * state->outerIntakeInversion);

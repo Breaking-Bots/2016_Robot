@@ -34,8 +34,9 @@ CHRISTOPH_CALLBACK(SingleControllerInputControlledCallback){
 		chassisState->chassisEnabled = !chassisState->chassisEnabled;
 	}
 
-	if(DPADTapped(gamepad, _DOWN)){
+	if(ButtonTapped(gamepad, _B)){
 		chassisState->tankDrive = !chassisState->tankDrive;
+		memory->Cout("QEQ");
 	}
 
 	SetChassisMagnitude(memory, memory->SystemMagnitudeInterpolation(MIN_SPEED, DEF_SPEED,
