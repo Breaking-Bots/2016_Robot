@@ -37,6 +37,63 @@ uul_extern{
 
 #include "HLInput.cpp"
 
+/* Fast Thread */
+
+Task fastThread;
+
+#if DISABLE_FAST_THREAD
+
+void StartFastThread(CHRISTOPHMemory* memory){
+
+}
+
+#else
+
+void StartFastThread(CHRISTOPHMemory* memory){
+	F64 dt = 1.0f / FAST_THREAD_HZ;
+	F64 targetMSPerFrame = 1000.0 * dt;
+	F64 lastTime = SystemTime();
+	for(;;) {
+
+		//UpdateChassis(&christophMemory);
+		//UpdateShooter(&christophMemory);
+
+		//Time Processing
+		F64 elapsedMS = SystemTime() - lastTime;
+		if(elapsedMS < targetMSPerFrame) {
+			Wait((targetMSPerFrame - elapsedMS) / 1000.0f);
+			F64 testElapsedMS = SystemTime() - lastTime;
+
+			if(testElapsedMS > targetMSPerFrame) {
+				//Cerr("Fast Thread Runtime waited too long.");
+			} else {
+				do {
+					elapsedMS = SystemTime() - lastTime;
+				} while(elapsedMS <= targetMSPerFrame);
+			}
+
+		} else {
+			Cout("Missed last Fast Thread Runtime frame.");
+		}
+
+		//Flip inputs
+		Input* tempInput = newInput;
+		newInput = oldInput;
+		oldInput = tempInput;
+
+		F64 endTime = SystemTime();
+		F64 frameTimeMS = endTime - lastTime;
+		lastTime = endTime;
+		F64 hz = 1000.0 / frameTimeMS;
+		
+		//Frame logging
+		//Cout("Last Fast Thread frame time: %.04fms (%.04fHz).", frameTimeMS, hz);
+	}
+}
+
+#endif
+
+
 }
 
 /* CHRISTOPH Class */
@@ -138,6 +195,8 @@ void CHRISTOPH::RobotMain(){
 
 	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(christophMemory.permanentStorage);
 	ChassisState* chassisState = &(christophState->chassisState);
+
+	fastThread = Task("FastThread", &StartFastThread, &christophMemory);
 
 	F64 dt = 1.0f / CORE_THREAD_HZ;
 	F64 targetMSPerFrame = 1000.0 * dt;
