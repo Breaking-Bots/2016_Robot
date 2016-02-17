@@ -48,8 +48,8 @@ void UpdateChassis(CHRISTOPHMemory* memory){
 	state->dRightEncoder = rightEncoderVal - state->rightEncoder;
 	state->rightEncoder = rightEncoderVal;
 
-	memory->Cout("%.4f || %.4f || %.4f|| %.4f", state->motorValues[0], 
-				 state->motorValues[1], state->motorValues[2], state->motorValues[3]);
+	//memory->Cout("%.4f || %.4f || %.4f|| %.4f", state->motorValues[0], 
+	//			 state->motorValues[1], state->motorValues[2], state->motorValues[3]);
 
 }
 

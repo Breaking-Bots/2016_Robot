@@ -31,18 +31,18 @@
 #define RIGHT_ENCODER_PORT_A 2
 #define RIGHT_ENCODER_PORT_B 3
 
-#define MIN_SPEED (0.35f)
-#define DEF_SPEED (0.65f)
+#define MIN_SPEED (0.5f)
+#define DEF_SPEED (0.85f)
 #define MAX_SPEED (1.00f)
 
 #define OUTER_INTAKE_SPEED (1.0f)
 #define INNER_INTAKE_SPEED (1.0f)
 #define SHOOTER_INTAKE_SPEED (-0.3f)
-#define DRAWBACK_SPEED (-0.9f)
+#define DRAWBACK_SPEED (-1.0f)
 #define DRAWBACK_TIME (0.5f)
 #define SHOOTER_SPEED (1.0f)
-#define SPIN_UP_TIME (0.5f)
-#define FOLLOW_THROUGH_TIME (0.5f)
+#define SPIN_UP_TIME (0.75f)
+#define FOLLOW_THROUGH_TIME (0.75f)
 
 #define NUM_TIMERS 16
 

@@ -14,6 +14,7 @@ CHRISTOPH_CALLBACK(SingleControllerInputControlledCallback){
 			state->timers[i] = {};
 		}
 		chassisState->chassisMagnitude = DEF_SPEED;
+		chassisState->reverse = False;
 		memory->isInitialized = True;
 	}
 
@@ -36,16 +37,27 @@ CHRISTOPH_CALLBACK(SingleControllerInputControlledCallback){
 
 	if(ButtonTapped(gamepad, _B)){
 		chassisState->tankDrive = !chassisState->tankDrive;
-		memory->Cout("QEQ");
+	}
+
+	if(ButtonTapped(gamepad, _L3)){
+		chassisState->reverse = !chassisState->reverse;
 	}
 
 	SetChassisMagnitude(memory, memory->SystemMagnitudeInterpolation(MIN_SPEED, DEF_SPEED,
 						MAX_SPEED, rt - lt));
 
 	if(chassisState->tankDrive){
-		TankDrive(memory, ly, ry);
+		if(chassisState->reverse){
+			TankDrive(memory, -ly, -ry);
+		}else{
+			TankDrive(memory, ly, ry);
+		}
 	}else{
-		CHRISTOPHDrive(memory, ly, rx);
+		if(chassisState->reverse){
+			CHRISTOPHDrive(memory, -ly, rx);
+		}else{
+			CHRISTOPHDrive(memory, ly, rx);
+		}
 	}
 
 	if(SufficientTimeElapsed(memory, 1) && SufficientTimeElapsed(memory, 2)){
@@ -92,6 +104,7 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 			state->timers[i] = {};
 		}
 		chassisState->chassisMagnitude = DEF_SPEED;
+		chassisState->reverse = False;
 		memory->isInitialized = True;
 	}
 
@@ -116,23 +129,38 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 		chassisState->chassisEnabled = !chassisState->chassisEnabled;
 	}
 
-	if(DPADTapped(driver, _DOWN)){
+	if(ButtonTapped(driver, _B)){
 		chassisState->tankDrive = !chassisState->tankDrive;
+	}
+
+	if(ButtonTapped(driver, _L3)){
+		chassisState->reverse = !chassisState->reverse;
 	}
 
 	SetChassisMagnitude(memory, memory->SystemMagnitudeInterpolation(MIN_SPEED, DEF_SPEED,
 						MAX_SPEED, drt - dlt));
 
+
 	if(chassisState->tankDrive){
-		TankDrive(memory, dly, dry);
+		if(chassisState->reverse){
+			TankDrive(memory, -dly, -dry);
+		}else{
+			TankDrive(memory, dly, dry);
+		}
 	}else{
-		CHRISTOPHDrive(memory, dly, drx);
+		if(chassisState->reverse){
+			CHRISTOPHDrive(memory, -dly, drx);
+		}else{
+			CHRISTOPHDrive(memory, dly, drx);
+		}
 	}
+
+	memory->Cout("%.4f || %.4f", slt, srt);
 
 	if(SufficientTimeElapsed(memory, 1) && SufficientTimeElapsed(memory, 2)){
 		SetShooterMotors(memory, srt - slt, srt - slt, srt - slt);
 
-		if(Button(shooter, _RB)){
+		if(Button(shooter, _RB) || Button(driver, _RB)){
 			SetShooterMotors(memory, OUTER_INTAKE_SPEED, INNER_INTAKE_SPEED, SHOOTER_INTAKE_SPEED);
 		}
 		if(ButtonTapped(shooter, _LB)){

@@ -44,6 +44,7 @@ typedef struct ChassisState{
 	B32 isInitialized; //Initialization flag
 	B32 chassisEnabled; //Allow chassis control flag
 	S32 invertedMotors[CHASSIS_NUM_MOTORS]; //Array of motor inversions
+	B32 reverse;
 	B32 tankDrive;
 	S32 leftEncoder;
 	S32 rightEncoder;
