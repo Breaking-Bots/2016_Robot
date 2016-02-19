@@ -64,7 +64,8 @@ CHRISTOPH_CALLBACK(SingleControllerInputControlledCallback){
 		SetShooterMotors(memory, right - left, right - left, right - left);
 
 		if(Button(gamepad, _RB)){
-			SetShooterMotors(memory, OUTER_INTAKE_SPEED, INNER_INTAKE_SPEED, SHOOTER_INTAKE_SPEED);
+			SetShooterMotors(memory, OUTER_INTAKE_SPEED, INNER_INTAKE_SPEED, 
+							 SHOOTER_INTAKE_SPEED);
 		}
 		if(ButtonTapped(gamepad, _LB)){
 			StartTimer(memory, 0, DRAWBACK_TIME);
@@ -125,6 +126,9 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 	F32 slt = Analog(shooter, _LT);
 	F32 srt = Analog(shooter, _RT);
 
+	S32 da = Button(driver, _A);
+	S32 dy = Button(driver, _Y);
+
 	if(ButtonTapped(driver, _START)){
 		chassisState->chassisEnabled = !chassisState->chassisEnabled;
 	}
@@ -132,6 +136,8 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 	if(ButtonTapped(driver, _B)){
 		chassisState->tankDrive = !chassisState->tankDrive;
 	}
+
+	chassisState->stepMotorValue = STEP_SPEED * memory->ClampN(dy - da);
 
 	if(ButtonTapped(driver, _L3)){
 		chassisState->reverse = !chassisState->reverse;
@@ -155,13 +161,14 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 		}
 	}
 
-	memory->Cout("%.4f || %.4f", slt, srt);
+	//memory->Cout("%.4f || %.4f", slt, srt);
 
 	if(SufficientTimeElapsed(memory, 1) && SufficientTimeElapsed(memory, 2)){
 		SetShooterMotors(memory, srt - slt, srt - slt, srt - slt);
 
 		if(Button(shooter, _RB) || Button(driver, _RB)){
-			SetShooterMotors(memory, OUTER_INTAKE_SPEED, INNER_INTAKE_SPEED, SHOOTER_INTAKE_SPEED);
+			SetShooterMotors(memory, OUTER_INTAKE_SPEED, INNER_INTAKE_SPEED,
+							 SHOOTER_INTAKE_SPEED);
 		}
 		if(ButtonTapped(shooter, _LB)){
 			StartTimer(memory, 0, DRAWBACK_TIME);
@@ -188,6 +195,15 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 		}
 
 	}
+#if 0
+	memory->Cout("Chassis: %.4f || %.4f || %.4f || %.4f", chassisState->motorValues[0], 
+				 chassisState->motorValues[1], chassisState->motorValues[2], 
+				 chassisState->motorValues[3]);
+	memory->Cout("Shooter: %.4f || %.4f || %.4f || %.4f || %.4f", 
+				shooterState->outerIntakeValue, 
+		 		shooterState->innerLowerIntakeValue, shooterState->innerUpperIntakeValue,
+		 		shooterState->lowerShooterValue, shooterState->upperShooterValue);
+#endif
 }
 
 CHRISTOPH_CALLBACK(InitTeleop){

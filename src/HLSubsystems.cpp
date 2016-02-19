@@ -2,6 +2,7 @@
 /* Chassis */
 
 Victor* motors[CHASSIS_NUM_MOTORS];
+Talon* stepMotor;
 Encoder* leftEncoder;
 Encoder* rightEncoder;
 
@@ -10,6 +11,7 @@ void InitializeChassis(){
 	motors[1] = new Victor(CHASSIS_PORT_BL);
 	motors[2] = new Victor(CHASSIS_PORT_FR);
 	motors[3] = new Victor(CHASSIS_PORT_BR);
+	stepMotor = new Talon(CHASSIS_PORT_ST);
 	leftEncoder = new Encoder(LEFT_ENCODER_PORT_A, LEFT_ENCODER_PORT_B, 
 				  false, Encoder::EncodingType::k4X);
 	rightEncoder = new Encoder(RIGHT_ENCODER_PORT_A, RIGHT_ENCODER_PORT_B, 
@@ -25,10 +27,12 @@ void UpdateChassis(CHRISTOPHMemory* memory){
 		state->isInitialized = True;
 		state->nMotors = CHASSIS_NUM_MOTORS;
 		
-		state->invertedMotors[0] = 1;
-		state->invertedMotors[1] = 1;
-		state->invertedMotors[2] = 1;
-		state->invertedMotors[3] = 1;
+		state->invertedMotors[0] = -1;
+		state->invertedMotors[1] = -1;
+		state->invertedMotors[2] = -1;
+		state->invertedMotors[3] = -1;
+		state->invertedStepMotor = -1;
+		state->reverse = True;
 
 		state->sensitivity = 0.5f;
 		state->chassisMagnitude = DEF_SPEED;
@@ -40,6 +44,7 @@ void UpdateChassis(CHRISTOPHMemory* memory){
 	for(U32 i = 0; i < state->nMotors; i++){
 		motors[i]->Set(state->motorValues[i] * state->invertedMotors[i]);
 	}
+	stepMotor->Set(state->stepMotorValue * state->invertedStepMotor);
 
 	S32 leftEncoderVal = leftEncoder->Get();
 	S32 rightEncoderVal = rightEncoder->Get();
@@ -48,8 +53,9 @@ void UpdateChassis(CHRISTOPHMemory* memory){
 	state->dRightEncoder = rightEncoderVal - state->rightEncoder;
 	state->rightEncoder = rightEncoderVal;
 
-	//memory->Cout("%.4f || %.4f || %.4f|| %.4f", state->motorValues[0], 
+	//Cout("%.4f || %.4f || %.4f|| %.4f", state->motorValues[0], 
 	//			 state->motorValues[1], state->motorValues[2], state->motorValues[3]);
+	Cout("%.4f", state->stepMotorValue * state->invertedStepMotor);
 
 }
 
@@ -103,9 +109,11 @@ void UpdateShooter(CHRISTOPHMemory* memory){
 	lowerShooterMotor->Set(state->lowerShooterValue * state->lowerShooterInversion);
 	upperShooterMotor->Set(state->upperShooterValue * state->upperShooterInversion);
 #if 0
-	Cout("%.4f || %.4f || %.4f || %.4f || %.4f", state->outerIntakeValue, 
-		 state->innerLowerIntakeValue, state->innerUpperIntakeValue,
-		 state->lowerShooterValue, state->upperShooterValue);
+	Cout("%.4f || %.4f || %.4f || %.4f || %.4f", state->outerIntakeValue *
+		 state->outerIntakeInversion, state->innerLowerIntakeValue * 
+		 state->innerLowerIntakeInversion, state->innerUpperIntakeValue * 
+		 state->innerUpperIntakeInversion, state->lowerShooterValue * 
+		 state->lowerShooterInversion, state->upperShooterValue * state->upperShooterInversion);
 #endif
 }
 

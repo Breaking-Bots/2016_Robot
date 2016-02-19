@@ -38,12 +38,14 @@ typedef struct CHRISTOPHMemory{
 
 typedef struct ChassisState{
 	F32 motorValues[CHASSIS_NUM_MOTORS]; //Array of motor speed values
+	F32 stepMotorValue;
 	F32 chassisMagnitude; //Magnitude of chassis speed
 	F32 sensitivity; //Sensitivity of RawDrive
 	U32 nMotors = CHASSIS_NUM_MOTORS; //Number of used motors
 	B32 isInitialized; //Initialization flag
 	B32 chassisEnabled; //Allow chassis control flag
 	S32 invertedMotors[CHASSIS_NUM_MOTORS]; //Array of motor inversions
+	S32 invertedStepMotor;
 	B32 reverse;
 	B32 tankDrive;
 	S32 leftEncoder;
