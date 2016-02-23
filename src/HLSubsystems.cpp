@@ -31,7 +31,7 @@ void UpdateChassis(CHRISTOPHMemory* memory){
 		state->invertedMotors[1] = -1;
 		state->invertedMotors[2] = -1;
 		state->invertedMotors[3] = -1;
-		state->invertedStepMotor = -1;
+		state->invertedStepMotor = 1;
 		state->reverse = True;
 
 		state->sensitivity = 0.5f;
@@ -55,7 +55,7 @@ void UpdateChassis(CHRISTOPHMemory* memory){
 
 	//Cout("%.4f || %.4f || %.4f|| %.4f", state->motorValues[0], 
 	//			 state->motorValues[1], state->motorValues[2], state->motorValues[3]);
-	Cout("%.4f", state->stepMotorValue * state->invertedStepMotor);
+	//Cout("%.4f", state->stepMotorValue * state->invertedStepMotor);
 
 }
 

@@ -76,7 +76,7 @@ CHRISTOPH_CALLBACK(SingleControllerInputControlledCallback){
 		}
 	}
 	if(SufficientTimeElapsed(memory, 0)){
-		if(ButtonTapped(gamepad, _A) && SufficientTimeElapsed(memory, 2)){
+		if(ButtonTapped(gamepad, _X) && SufficientTimeElapsed(memory, 2)){
 			StartTimer(memory, 1, SPIN_UP_TIME);
 		}	
 
@@ -109,8 +109,8 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 		memory->isInitialized = True;
 	}
 
-	Gamepad* driver = GetGamepad(input, 0);
-	Gamepad* shooter = GetGamepad(input, 1);
+	Gamepad* driver = GetGamepad(input, DRIVER_GAMEPAD);
+	Gamepad* shooter = GetGamepad(input, SHOOTER_GAMEPAD);
 
 	//Input processing
 	F32 dlx = Analog(driver, _LX);
@@ -128,16 +128,21 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 
 	S32 da = Button(driver, _A);
 	S32 dy = Button(driver, _Y);
+	S32 sa = Button(shooter, _A);
+	S32 sy = Button(shooter, _Y);
+
+	S32 dl = DPAD(driver, _LEFT);
+	S32 dr = DPAD(driver, _RIGHT);
 
 	if(ButtonTapped(driver, _START)){
 		chassisState->chassisEnabled = !chassisState->chassisEnabled;
 	}
 
 	if(ButtonTapped(driver, _B)){
-		chassisState->tankDrive = !chassisState->tankDrive;
+		//chassisState->tankDrive = !chassisState->tankDrive;
 	}
 
-	chassisState->stepMotorValue = STEP_SPEED * memory->ClampN(dy - da);
+	chassisState->stepMotorValue = STEP_SPEED * memory->Clamp(dy + sy - da - sa, -0.6f, 1.0f);
 
 	if(ButtonTapped(driver, _L3)){
 		chassisState->reverse = !chassisState->reverse;
@@ -161,12 +166,15 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 		}
 	}
 
-	//memory->Cout("%.4f || %.4f", slt, srt);
+	//memory->Cout("%.4f || %.4f", slt, srt);	
+	F32 shooterMotorControlTriplex = memory->ClampN(srt + dr - slt - dl);
 
 	if(SufficientTimeElapsed(memory, 1) && SufficientTimeElapsed(memory, 2)){
-		SetShooterMotors(memory, srt - slt, srt - slt, srt - slt);
+		SetShooterMotors(memory, shooterMotorControlTriplex, shooterMotorControlTriplex,
+						 shooterMotorControlTriplex);
 
-		if(Button(shooter, _RB) || Button(driver, _RB)){
+		//TODO: put shooter intake back
+		if(Button(shooter, _RB) ||	Button(driver, _RB)){
 			SetShooterMotors(memory, OUTER_INTAKE_SPEED, INNER_INTAKE_SPEED,
 							 SHOOTER_INTAKE_SPEED);
 		}
@@ -174,11 +182,11 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 			StartTimer(memory, 0, DRAWBACK_TIME);
 		}
 		if(!SufficientTimeElapsed(memory, 0)){
-			SetShooterMotors(memory, 0.0f, DRAWBACK_SPEED, DRAWBACK_SPEED);
+			SetShooterMotors(memory, OUTER_INTAKE_SPEED, DRAWBACK_SPEED, DRAWBACK_SPEED);
 		}
 	}
 	if(SufficientTimeElapsed(memory, 0)){
-		if(ButtonTapped(shooter, _A) && SufficientTimeElapsed(memory, 2)){
+		if(ButtonTapped(shooter, _X) && SufficientTimeElapsed(memory, 2)){
 			StartTimer(memory, 1, SPIN_UP_TIME);
 		}	
 

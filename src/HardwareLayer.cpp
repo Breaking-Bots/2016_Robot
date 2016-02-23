@@ -50,6 +50,18 @@ void StartFastThread(CHRISTOPHMemory* memory){
 #else
 
 void StartFastThread(CHRISTOPHMemory* memory){
+	CameraServer* cs = CameraServer::GetInstance();
+	USBCamera* cam = new USBCamera("cam0", True);
+	Image* image0 = imaqCreateImage(IMAQ_IMAGE_RGB, 0);
+
+	cam->SetFPS(60);
+	cam->SetBrightness(0);
+	cam->SetSize(320, 240);
+	cam->OpenCamera();
+	cam->UpdateSettings();
+
+	cam->StartCapture();
+
 	F64 dt = 1.0f / FAST_THREAD_HZ;
 	F64 targetMSPerFrame = 1000.0 * dt;
 	F64 lastTime = SystemTime();
@@ -57,6 +69,16 @@ void StartFastThread(CHRISTOPHMemory* memory){
 
 		//UpdateChassis(&christophMemory);
 		//UpdateShooter(&christophMemory);
+
+		//Vision
+#if 1
+		cam->GetImage(image0);
+		if(image0){
+			cs->SetImage(image0);
+		}else{
+			Cerr("Null image");
+		}
+#endif
 
 		//Time Processing
 		F64 elapsedMS = SystemTime() - lastTime;
@@ -73,13 +95,9 @@ void StartFastThread(CHRISTOPHMemory* memory){
 			}
 
 		} else {
-			Cout("Missed last Fast Thread Runtime frame.");
+			//Cout("Missed last Fast Thread Runtime frame.");
 		}
 
-		//Flip inputs
-		Input* tempInput = newInput;
-		newInput = oldInput;
-		oldInput = tempInput;
 
 		F64 endTime = SystemTime();
 		F64 frameTimeMS = endTime - lastTime;
@@ -89,6 +107,9 @@ void StartFastThread(CHRISTOPHMemory* memory){
 		//Frame logging
 		//Cout("Last Fast Thread frame time: %.04fms (%.04fHz).", frameTimeMS, hz);
 	}
+
+	cam->StopCapture();
+
 }
 
 #endif
@@ -115,6 +136,20 @@ void CHRISTOPH::RobotMain(){
 	//Init
 	LiveWindow* lw = LiveWindow::GetInstance();
 	DriverStation* ds = &DriverStation::GetInstance();
+#if 0
+	CameraServer* cs = CameraServer::GetInstance();
+	USBCamera* cam = new USBCamera("cam0", True);
+	Image* image0 = imaqCreateImage(IMAQ_IMAGE_RGB, 0);
+
+	cam->SetFPS(30);
+	cam->SetBrightness(0);
+	cam->SetSize(320, 240);
+	cam->OpenCamera();
+	cam->UpdateSettings();
+
+	cam->StartCapture();
+#endif
+
 	lw->SetEnabled(True);
 
 	Cout("Initializing");
@@ -171,6 +206,8 @@ void CHRISTOPH::RobotMain(){
 	christophMemory.transientStorage = ((U8*)christophMemory.permanentStorage + 
 									    christophMemory.permanentStorageSize);
 
+	fastThread = Task("FastThread", &StartFastThread, &christophMemory);
+
 	//Input initialization
 	Input inputs[2];
 	inputs[0] = {};
@@ -196,7 +233,6 @@ void CHRISTOPH::RobotMain(){
 	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(christophMemory.permanentStorage);
 	ChassisState* chassisState = &(christophState->chassisState);
 
-	fastThread = Task("FastThread", &StartFastThread, &christophMemory);
 
 	F64 dt = 1.0f / CORE_THREAD_HZ;
 	F64 targetMSPerFrame = 1000.0 * dt;
@@ -290,6 +326,15 @@ void CHRISTOPH::RobotMain(){
 
 		UpdateChassis(&christophMemory);
 		UpdateShooter(&christophMemory);
+
+#if 0
+		cam->GetImage(image0);
+		if(image0){
+			cs->SetImage(image0);
+		}else{
+			Cerr("Null image");
+		}
+#endif
 
 		//Time Processing
 		F64 elapsedMS = SystemTime() - lastTime;

@@ -7,9 +7,11 @@
 #define DISABLE_FAST_THREAD 1
 
 #define CORE_THREAD_HZ 50
-#define FAST_THREAD_HZ 200
+#define FAST_THREAD_HZ 60
 
 #define NUM_GAMEPADS 2
+#define DRIVER_GAMEPAD 0
+#define SHOOTER_GAMEPAD 1
 
 #define CHASSIS_NUM_MOTORS 4
 #define CHASSIS_PORT_FL 6
@@ -34,17 +36,17 @@
 
 #define MIN_SPEED (0.5f)
 #define DEF_SPEED (0.85f)
-#define MAX_SPEED (1.00f)
+#define MAX_SPEED (1.0f)
 #define STEP_SPEED (0.3f)
 
 #define OUTER_INTAKE_SPEED (1.0f)
 #define INNER_INTAKE_SPEED (1.0f)
 #define SHOOTER_INTAKE_SPEED (-0.3f)
 #define DRAWBACK_SPEED (-1.0f)
-#define DRAWBACK_TIME (0.5f)
+#define DRAWBACK_TIME (0.75f)
 #define SHOOTER_SPEED (1.0f)
-#define SPIN_UP_TIME (0.75f)
-#define FOLLOW_THROUGH_TIME (0.75f)
+#define SPIN_UP_TIME (1.25f)
+#define FOLLOW_THROUGH_TIME (1.0f)
 
 #define NUM_TIMERS 16
 
