@@ -1,6 +1,6 @@
 @echo off
 
 ssh-keygen -t rsa
-ssh admin@roboRIO-5428-FRC.local "mkdir ~/.ssh; chmod 777 ~/.ssh"
-scp id_rsa.pub admin@roboRIO-5428-FRC.local:~/.ssh/authorized-keys
+ssh admin@10.54.28.90 "mkdir ~/.ssh; chmod 777 ~/.ssh"
+scp id_rsa.pub admin@10.54.28.90:~/.ssh/authorized-keys
 PAUSE

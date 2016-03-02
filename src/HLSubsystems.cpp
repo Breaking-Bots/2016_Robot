@@ -56,7 +56,11 @@ void UpdateChassis(CHRISTOPHMemory* memory){
 	//Cout("%.4f || %.4f || %.4f|| %.4f", state->motorValues[0], 
 	//			 state->motorValues[1], state->motorValues[2], state->motorValues[3]);
 	//Cout("%.4f", state->stepMotorValue * state->invertedStepMotor);
-
+	SmartDashboard::PutNumber("FLD", state->motorValues[0] * state->invertedMotors[0]);
+	SmartDashboard::PutNumber("BLD", state->motorValues[1] * state->invertedMotors[1]);
+	SmartDashboard::PutNumber("FRD", state->motorValues[2] * state->invertedMotors[2]);
+	SmartDashboard::PutNumber("BRD", state->motorValues[3] * state->invertedMotors[3]);
+	SmartDashboard::PutNumber("STP", state->stepMotorValue * state->invertedStepMotor);
 }
 
 void TerminateChassis(){
@@ -115,6 +119,13 @@ void UpdateShooter(CHRISTOPHMemory* memory){
 		 state->innerUpperIntakeInversion, state->lowerShooterValue * 
 		 state->lowerShooterInversion, state->upperShooterValue * state->upperShooterInversion);
 #endif
+	SmartDashboard::PutNumber("OI", state->outerIntakeValue * state->outerIntakeInversion);
+	SmartDashboard::PutNumber("ILI", state->innerLowerIntakeValue * 
+							 state->innerLowerIntakeInversion);
+	SmartDashboard::PutNumber("IUI", state->innerUpperIntakeValue * 
+							 state->innerUpperIntakeInversion);
+	SmartDashboard::PutNumber("LS", state->lowerShooterValue * state->lowerShooterInversion);
+	SmartDashboard::PutNumber("US", state->upperShooterValue * state->upperShooterInversion);
 }
 
 void TerminateShooter(){

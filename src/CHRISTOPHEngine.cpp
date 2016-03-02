@@ -182,7 +182,7 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 			StartTimer(memory, 0, DRAWBACK_TIME);
 		}
 		if(!SufficientTimeElapsed(memory, 0)){
-			SetShooterMotors(memory, OUTER_INTAKE_SPEED, DRAWBACK_SPEED, DRAWBACK_SPEED);
+			SetShooterMotors(memory, OUTER_INTAKE_SPEED	, DRAWBACK_SPEED, DRAWBACK_SPEED);
 		}
 	}
 	if(SufficientTimeElapsed(memory, 0)){
