@@ -47,6 +47,10 @@
 #define SHOOTER_SPEED (1.0f)
 #define SPIN_UP_TIME (1.25f)
 #define FOLLOW_THROUGH_TIME (1.0f)
+#define AUTON_DRIVE_SPEED (0.65f)
+#define AUTON_WAIT_TIME (1.0f)
+#define AUTON_PAUSE_TIME (1.0f)
+#define AUTON_DRIVE_TIME (1.0f)
 
 #define NUM_TIMERS 16
 

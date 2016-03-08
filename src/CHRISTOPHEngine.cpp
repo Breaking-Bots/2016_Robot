@@ -243,6 +243,46 @@ CHRISTOPH_CALLBACK(InitAutonomous){
 }
 
 CHRISTOPH_CALLBACK(AutonomousCallback){
+	CHRISTOPHState* state = scast<CHRISTOPHState*>(memory->permanentStorage);
+	if(!state->autonState0){
+		state->autonState0 = True;
+		StartTimer(memory, 3, AUTON_WAIT_TIME);
+	}
+
+	SufficientTimeElapsed(memory, 3);
+	if(state->autonState0 && TimerEnded(memory, 3) && !state->autonState1){
+		state->autonState1 = True;
+		StartTimer(memory, 4, AUTON_DRIVE_TIME);
+		CHRISTOPHDrive(memory, AUTON_DRIVE_SPEED, 0);
+	}
+
+	SufficientTimeElapsed(memory, 4);
+	if(state->autonState1 && TimerEnded(memory, 4) && !state->autonState2){
+		state->autonState2 = True;
+		StartTimer(memory, 5, AUTON_PAUSE_TIME);
+		CHRISTOPHDrive(memory, 0, 0);
+	}
+
+	SufficientTimeElapsed(memory, 5);
+	if(state->autonState2 && TimerEnded(memory, 5) && !state->autonState3){
+		state->autonState3 = True;
+		StartTimer(memory, 6, DRAWBACK_TIME);
+		SetShooterMotors(memory, OUTER_INTAKE_SPEED	, DRAWBACK_SPEED, DRAWBACK_SPEED);
+	}
+
+	SufficientTimeElapsed(memory, 6);
+	if(state->autonState3 && TimerEnded(memory, 6) && !state->autonState4){
+		state->autonState4 = True;
+		StartTimer(memory, 7, SPIN_UP_TIME);
+		SetShooterMotors(memory, 0.0f, 0.0f, SHOOTER_SPEED);
+	}
+
+	SufficientTimeElapsed(memory, 7);
+	if(state->autonState4 && TimerEnded(memory, 7) && !state->autonState5){
+		state->autonState5 = True;
+		StartTimer(memory, 8, FOLLOW_THROUGH_TIME);
+		SetShooterMotors(memory, 0.0f, SHOOTER_SPEED, SHOOTER_SPEED);
+	}
 
 }
 
