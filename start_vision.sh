@@ -1,1 +1,1 @@
-sudo mjpg-streamer -i "input_uvc.so -d /dev/video0 -f 10 -r 320x240 -y -n" -o "output_http.so -w ./www -p 1180"
+sudo mjpg-streamer -i "input_uvc.so -d /dev/video0 -f 10 -q 40 -r 320x240 -y -n" -o "output_http.so -w ./www -p 1180"
