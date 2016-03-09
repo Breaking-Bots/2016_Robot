@@ -12,6 +12,6 @@ arm-frc-linux-gnueabi-g++ -shared %CommonCompilerFlags% -fmessage-length=0 -o ..
 
 popd
 
-ssh lvuser@roboRIO-5428-FRC.local "rm /home/lvuser/libCHRISTOPH.so || true;" 2>nul
-sftp -oBatchMode=no -b sftpCHRISTOPHEngine lvuser@roboRIO-5428-FRC > nul 2>&1
+ssh lvuser@10.54.28.2 "rm /home/lvuser/libCHRISTOPH.so || true;" 2>nul
+sftp -oBatchMode=no -b sftpCHRISTOPHEngine lvuser@10.54.28.2 > nul 2>&1
 echo Deployed CHRISTOPH Engine

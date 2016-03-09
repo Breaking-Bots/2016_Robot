@@ -50,9 +50,10 @@
 #define AUTON_DRIVE_SPEED (0.65f)
 #define AUTON_WAIT_TIME (1.0f)
 #define AUTON_PAUSE_TIME (1.0f)
-#define AUTON_DRIVE_TIME (1.0f)
+#define AUTON_DRIVE_TIME (5.0f)
 
 #define NUM_TIMERS 16
+#define NUM_AUTON_STATES 16
 
 #define CHRISTOPHEngineBinary ("/home/lvuser/libCHRISTOPH.so")
 #define CHRISTOPHEngineTempBinary ("/home/lvuser/libCHRISTOPH_temp.so")

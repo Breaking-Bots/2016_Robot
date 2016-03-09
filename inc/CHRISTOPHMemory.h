@@ -83,19 +83,7 @@ typedef struct CHRISTOPHState{
 	ChassisState chassisState;
 	ShooterState shooterState;
 	CHRISTOPHTimer timers[NUM_TIMERS];
-	B32 autonState0;
-	B32 autonState1;
-	B32 autonState2;
-	B32 autonState3;
-	B32 autonState4;
-	B32 autonState5;
-	B32 autonState6;
-	B32 autonState7;
-	B32 autonState8;
-	B32 autonState9;
-	B32 autonState10;
-	B32 autonState11;
-	B32 autonState12;
+	B32 autonState[NUM_AUTON_STATES];
 } CHRISTOPHState;
 
 #endif
