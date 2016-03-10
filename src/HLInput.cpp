@@ -1,7 +1,8 @@
-intern void ProcessDigitalButton(U32 buttonBitSet, ButtonState* oldState, U32 buttonBit, 
-								 ButtonState* newState){
+intern void ProcessDigitalButton(U32 buttonBitSet, ButtonState* oldState, 
+								 U32 buttonBit, ButtonState* newState){
 	newState->endedDown = ((buttonBitSet & buttonBit) == buttonBit);
-	newState->halfTransitionCount = (oldState->endedDown != newState->endedDown) ? 1 : 0;
+	newState->halfTransitionCount = (oldState->endedDown != newState->endedDown) ?
+									 1 : 0;
 }
 
 intern void ProcessStickInput(F32* _x, F32* _y){
@@ -65,13 +66,17 @@ void UpdateInput(DriverStation* ds, Input* newInput, Input* oldInput){
 		S32 dpad = ds->GetStickPOV(i, 0);
 
 		//if(dpad != -1){
-			ProcessDigitalButton((dpad >= 315 || dpad <= 45)? 1 : 0, &oldGamepad->up, 1, 
+			ProcessDigitalButton((dpad >= 315 || dpad <= 45)? 1 : 0, 
+								 &oldGamepad->up, 1, 
 								 &newGamepad->up);
-			ProcessDigitalButton((dpad >= 45 && dpad <= 135)? 1 : 0, &oldGamepad->right, 1, 
+			ProcessDigitalButton((dpad >= 45 && dpad <= 135)? 1 : 0, 
+								 &oldGamepad->right, 1, 
 								 &newGamepad->right);
-			ProcessDigitalButton((dpad >= 135 && dpad <= 225)? 1 : 0, &oldGamepad->down, 1, 
+			ProcessDigitalButton((dpad >= 135 && dpad <= 225)? 1 : 0, 
+								 &oldGamepad->down, 1, 
 								 &newGamepad->down);
-			ProcessDigitalButton((dpad >= 225 && dpad <= 315)? 1 : 0, &oldGamepad->left, 1,
+			ProcessDigitalButton((dpad >= 225 && dpad <= 315)? 1 : 0,
+								 &oldGamepad->left, 1,
 								 &newGamepad->left);
 		//}
 
@@ -102,5 +107,43 @@ void UpdateInput(DriverStation* ds, Input* newInput, Input* oldInput){
 		newGamepad->rt = rt;
 
 		//Cout("%.4f || %.4f || %.4f || %.4f", lx, ly, rx, ry);
+	}
+}
+
+void ProcessHLInputProtocols(HLState* state, Input* input){
+	for(U32 i = 0; i < NUM_GAMEPADS; i++){
+		if(input->gamepads[i].start.endedDown && 
+		   input->gamepads[i].start.halfTransitionCount){
+			
+			#if RECORDED_AUTON
+
+			if(state->recordingHandle || state->recordingIndex){
+				EndInputRecording(state);
+			}
+			if(state->playbackHandle || state->playbackIndex){
+				EndInputPlayback(state);
+			}
+
+			BeginInputRecording(state, 1);
+
+			#endif
+
+		}else if(input->gamepads[i].start.endedDown && 
+		   		 input->gamepads[i].start.halfTransitionCount){
+
+			#if RECORDED_AUTON
+
+			if(state->recordingHandle || state->recordingIndex){
+				EndInputRecording(state);
+			}
+			if(state->playbackHandle || state->playbackIndex){
+				EndInputPlayback(state);
+			}
+			
+			BeginInputPlayback(state, 1);
+
+			#endif
+
+		}
 	}
 }

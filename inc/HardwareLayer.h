@@ -217,6 +217,18 @@ void UpdateShooter(CHRISTOPHMemory* memory);
  */
 void TerminateShooter();
 
+/* Hardware Layer */
+
+struct HLState{
+	U32 totalSize;
+	void* totalCHRISTOPHMemoryBlock;
+
+	U32 recordingHandle;
+	U32 recordingIndex;
+	U32 playbackHandle;
+	U32 playbackIndex;
+};
+
 /* Input */
 
 /**
@@ -224,14 +236,23 @@ void TerminateShooter();
  */
 void UpdateInput(DriverStation* ds, Input* newInput, Input* oldInput);
 
+void ProcessHLInputProtocols(HLState* state, Input* input);
+
+/* Recording */
+
+void BeginInputRecording(HLState* state, U32 recordingIndex);
+
+void EndInputRecording(HLState* state);
+
+void BeginInputPlayback(HLState* state, U32 playbackIndex);
+
+void EndInputPlayback(HLState* state);
+
+void RecordInput(HLState* state, Input* input);
+
+void PlayBackInput(HLState* state, Input* input);
+
 }
-
-/* Hardware Layer */
-
-struct HLState{
-	U32 totalSize;
-	void* totalCHRISTOPHMemoryBlock;
-};
 
 /* CHRISTOPH Class */
 

@@ -4,6 +4,9 @@
 
 uul_extern {
 
+#include "CHRISTOPHAuton.h"
+
+
 CHRISTOPH_CALLBACK(SingleControllerInputControlledCallback){
 	CHRISTOPHState* state = scast<CHRISTOPHState*>(memory->permanentStorage);
 	ChassisState* chassisState = &(state->chassisState);
@@ -43,8 +46,8 @@ CHRISTOPH_CALLBACK(SingleControllerInputControlledCallback){
 		chassisState->reverse = !chassisState->reverse;
 	}
 
-	SetChassisMagnitude(memory, memory->SystemMagnitudeInterpolation(MIN_SPEED, DEF_SPEED,
-						MAX_SPEED, rt - lt));
+	SetChassisMagnitude(memory, memory->SystemMagnitudeInterpolation(MIN_SPEED, 
+						DEF_SPEED, MAX_SPEED, rt - lt));
 
 	if(chassisState->tankDrive){
 		if(chassisState->reverse){
@@ -135,7 +138,7 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 	S32 dr = DPAD(driver, _RIGHT);
 
 	if(ButtonTapped(driver, _START)){
-		chassisState->chassisEnabled = !chassisState->chassisEnabled;
+		//chassisState->chassisEnabled = !chassisState->chassisEnabled;
 	}
 
 	if(ButtonTapped(driver, _B)){
@@ -148,8 +151,8 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 		chassisState->reverse = !chassisState->reverse;
 	}
 
-	SetChassisMagnitude(memory, memory->SystemMagnitudeInterpolation(MIN_SPEED, DEF_SPEED,
-						MAX_SPEED, drt - dlt));
+	SetChassisMagnitude(memory, memory->SystemMagnitudeInterpolation(MIN_SPEED,
+						DEF_SPEED, MAX_SPEED, drt - dlt));
 
 
 	if(chassisState->tankDrive){
@@ -170,8 +173,8 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 	F32 shooterMotorControlTriplex = memory->ClampN(srt + dr - slt - dl);
 
 	if(SufficientTimeElapsed(memory, 1) && SufficientTimeElapsed(memory, 2)){
-		SetShooterMotors(memory, shooterMotorControlTriplex, shooterMotorControlTriplex,
-						 shooterMotorControlTriplex);
+		SetShooterMotors(memory, shooterMotorControlTriplex, 
+						 shooterMotorControlTriplex, shooterMotorControlTriplex);
 
 		//TODO: put shooter intake back
 		if(Button(shooter, _RB) ||	Button(driver, _RB)){
@@ -182,7 +185,8 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 			StartTimer(memory, 0, DRAWBACK_TIME);
 		}
 		if(!SufficientTimeElapsed(memory, 0)){
-			SetShooterMotors(memory, OUTER_INTAKE_SPEED	, DRAWBACK_SPEED, DRAWBACK_SPEED);
+			SetShooterMotors(memory, OUTER_INTAKE_SPEED, 
+							 DRAWBACK_SPEED, DRAWBACK_SPEED);
 		}
 	}
 	if(SufficientTimeElapsed(memory, 0)){
@@ -204,12 +208,14 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 
 	}
 #if 0
-	memory->Cout("Chassis: %.4f || %.4f || %.4f || %.4f", chassisState->motorValues[0], 
+	memory->Cout("Chassis: %.4f || %.4f || %.4f || %.4f", 
+				 chassisState->motorValues[0], 
 				 chassisState->motorValues[1], chassisState->motorValues[2], 
 				 chassisState->motorValues[3]);
 	memory->Cout("Shooter: %.4f || %.4f || %.4f || %.4f || %.4f", 
 				shooterState->outerIntakeValue, 
-		 		shooterState->innerLowerIntakeValue, shooterState->innerUpperIntakeValue,
+		 		shooterState->innerLowerIntakeValue, 
+		 		shooterState->innerUpperIntakeValue,
 		 		shooterState->lowerShooterValue, shooterState->upperShooterValue);
 #endif
 }
@@ -247,52 +253,24 @@ CHRISTOPH_CALLBACK(InitAutonomous){
 }
 
 CHRISTOPH_CALLBACK(AutonomousCallback){
-	CHRISTOPHState* state = scast<CHRISTOPHState*>(memory->permanentStorage);
-	if(!state->autonState[0]){
-		state->autonState[0] = True;
-		StartTimer(memory, 3, AUTON_WAIT_TIME);
-	}
 
-	SufficientTimeElapsed(memory, 3);
-	if(state->autonState[0] && TimerEnded(memory, 3) && !state->autonState[1]){
-		state->autonState[1] = True;
-		StartTimer(memory, 4, AUTON_DRIVE_TIME);
-		CHRISTOPHDrive(memory, AUTON_DRIVE_SPEED, 0);
-	}
+#if RECORDED_AUTON
 
-	SufficientTimeElapsed(memory, 4);
-	if(state->autonState[1] && TimerEnded(memory, 4) && !state->autonState[2]){
-		state->autonState[2] = True;
-		StartTimer(memory, 5, AUTON_PAUSE_TIME);
-		CHRISTOPHDrive(memory, 0, 0);
-	}
+	#if NUM_GAMEPADS == 1
+		SingleControllerInputControlledCallback(memory, input, dt);
+	#elif NUM_GAMEPADS == 2
+		DoubleControllerInputControlledCallback(memory, input, dt);
+	#endif
 
-	SufficientTimeElapsed(memory, 5);
-	if(state->autonState[2] && TimerEnded(memory, 5) && !state->autonState[3]){
-		state->autonState[3] = True;
-		StartTimer(memory, 6, DRAWBACK_TIME);
-		SetShooterMotors(memory, OUTER_INTAKE_SPEED	, DRAWBACK_SPEED, DRAWBACK_SPEED);
-	}
+#else 
 
-	SufficientTimeElapsed(memory, 6);
-	if(state->autonState[3] && TimerEnded(memory, 6) && !state->autonState[4]){
-		state->autonState[4] = True;
-		StartTimer(memory, 7, SPIN_UP_TIME);
-		SetShooterMotors(memory, 0.0f, 0.0f, SHOOTER_SPEED);
-	}
+	#if DRIVE_AND_SHOOT_SPYBOT_AUTON
 
-	SufficientTimeElapsed(memory, 7);
-	if(state->autonState[4] && TimerEnded(memory, 7) && !state->autonState[5]){
-		state->autonState[5] = True;
-		StartTimer(memory, 8, FOLLOW_THROUGH_TIME);
-		SetShooterMotors(memory, 0.0f, SHOOTER_SPEED, SHOOTER_SPEED);
-	}
+		DriveAndShootSpybotAuton(memory, input, dt);
 
-	SufficientTimeElapsed(memory, 8);
-	if(state->autonState[5] && TimerEnded(memory, 8) && !state->autonState[6]){
-		state->autonState[6] = True;
-		SetShooterMotors(memory, 0.0f, 0.0f, 0.0f);
-	}
+	#endif
+
+#endif
 
 }
 
@@ -306,7 +284,8 @@ CHRISTOPH_CALLBACK(DisabledCallback){
 
 /* Chassis */
 
-intern void SetLeftRightMotorValues(CHRISTOPHMemory* memory, F32 leftMgntd, F32 rightMgntd){
+intern void SetLeftRightMotorValues(CHRISTOPHMemory* memory, F32 leftMgntd, 
+									F32 rightMgntd){
 	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(memory->permanentStorage);
 	ChassisState* state = &christophState->chassisState;
 	if(state->chassisEnabled){

@@ -50,10 +50,6 @@ void StartFastThread(CHRISTOPHMemory* memory){
 #else
 
 void StartFastThread(CHRISTOPHMemory* memory){
-	CameraServer* cs = CameraServer::GetInstance();
-	USBCamera* cam = new USBCamera("cam0", True);
-	Image* image0 = imaqCreateImage(IMAQ_IMAGE_RGB, 0);
-
 	cam->SetFPS(60);
 	cam->SetBrightness(0);
 	cam->SetSize(320, 240);
@@ -69,16 +65,6 @@ void StartFastThread(CHRISTOPHMemory* memory){
 
 		//UpdateChassis(&christophMemory);
 		//UpdateShooter(&christophMemory);
-
-		//Vision
-#if 1
-		cam->GetImage(image0);
-		if(image0){
-			cs->SetImage(image0);
-		}else{
-			Cerr("Null image");
-		}
-#endif
 
 		//Time Processing
 		F64 elapsedMS = SystemTime() - lastTime;
@@ -108,11 +94,13 @@ void StartFastThread(CHRISTOPHMemory* memory){
 		//Cout("Last Fast Thread frame time: %.04fms (%.04fHz).", frameTimeMS, hz);
 	}
 
-	cam->StopCapture();
-
 }
 
 #endif
+
+/* Recording */
+
+#include "HLRecording.cpp"
 
 
 }
@@ -136,19 +124,6 @@ void CHRISTOPH::RobotMain(){
 	//Init
 	LiveWindow* lw = LiveWindow::GetInstance();
 	DriverStation* ds = &DriverStation::GetInstance();
-#if 0
-	CameraServer* cs = CameraServer::GetInstance();
-	USBCamera* cam = new USBCamera("cam0", True);
-	Image* image0 = imaqCreateImage(IMAQ_IMAGE_RGB, 0);
-
-	cam->SetFPS(30);
-	cam->SetBrightness(0);
-	cam->SetSize(320, 240);
-	cam->OpenCamera();
-	cam->UpdateSettings();
-
-	cam->StartCapture();
-#endif
 
 	lw->SetEnabled(True);
 
@@ -253,10 +228,22 @@ void CHRISTOPH::RobotMain(){
 		}
 
 		UpdateInput(ds, newInput, oldInput);
+		ProcessHLInputProtocols(&hlState, newInput);
 
 		//Executing user function based on robot state
 		if(IsAutonomous() && IsEnabled()){
 			if(!autonomousInit){
+
+				#if RECORDED_AUTON
+				if(hlState.recordingHandle || hlState.recordingIndex){
+					EndInputRecording(&hlState);
+				}
+				if(hlState.playbackHandle || hlState.playbackIndex){
+					EndInputPlayback(&hlState);
+				}
+			
+				BeginInputPlayback(&hlState, 1);
+				#endif
 
 				lw->SetEnabled(False);
 				ds->InAutonomous(True);
@@ -270,6 +257,11 @@ void CHRISTOPH::RobotMain(){
 				disabledInit = False;
 
 			}
+
+			#if RECORDED_AUTON
+			PlayBackInput(&ehlState, newInput);
+			#endif
+
 			//Autonomous Iterative Dytor
 			engine.AutonomousCallback(&christophMemory, newInput, dt);
 
@@ -326,15 +318,6 @@ void CHRISTOPH::RobotMain(){
 
 		UpdateChassis(&christophMemory);
 		UpdateShooter(&christophMemory);
-
-#if 0
-		cam->GetImage(image0);
-		if(image0){
-			cs->SetImage(image0);
-		}else{
-			Cerr("Null image");
-		}
-#endif
 
 		//Time Processing
 		F64 elapsedMS = SystemTime() - lastTime;
