@@ -145,7 +145,7 @@ CHRISTOPH_CALLBACK(DoubleControllerInputControlledCallback){
 		//chassisState->tankDrive = !chassisState->tankDrive;
 	}
 
-	chassisState->stepMotorValue = STEP_SPEED * memory->ClampN(dy + sy - da - sa);
+	SetStepHammerMotor(memory, dy + sy - da - sa);
 
 	if(ButtonTapped(driver, _L3)){
 		chassisState->reverse = !chassisState->reverse;
@@ -268,6 +268,10 @@ CHRISTOPH_CALLBACK(AutonomousCallback){
 
 		DriveAndShootSpybotAuton(memory, input, dt);
 
+	#elif SHOOT_SPYBOT_AUTON
+
+		ShootSpybotAuton(memory, input, dt);
+
 	#endif
 
 #endif
@@ -290,21 +294,23 @@ intern void SetLeftRightMotorValues(CHRISTOPHMemory* memory, F32 leftMgntd,
 	ChassisState* state = &christophState->chassisState;
 	if(state->chassisEnabled){
 		state->motorValues[0] = memory->ClampN(leftMgntd * state->chassisMagnitude);
-		state->motorValues[1] = memory->ClampN(leftMgntd * state->chassisMagnitude);
-		state->motorValues[2] = memory->ClampN(-rightMgntd * state->chassisMagnitude);
-		state->motorValues[3] = memory->ClampN(-rightMgntd * state->chassisMagnitude);
+		state->motorValues[1] = memory->ClampN(-rightMgntd * state->chassisMagnitude);
 	}
 }
 
-intern void SetMotorValues(CHRISTOPHMemory* memory, F32 m0, F32 m1, F32 m2, F32 m3){
+intern void SetMotorValues(CHRISTOPHMemory* memory, F32 m0, F32 m1){
 	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(memory->permanentStorage);
 	ChassisState* state = &christophState->chassisState;
 	if(state->chassisEnabled){
 		state->motorValues[0] = memory->ClampN(m0 * state->chassisMagnitude);
 		state->motorValues[1] = memory->ClampN(m1 * state->chassisMagnitude);
-		state->motorValues[2] = memory->ClampN(-m2 * state->chassisMagnitude);
-		state->motorValues[3] = memory->ClampN(-m3 * state->chassisMagnitude);;
 	}
+}
+
+void SetStepHammerMotor(CHRISTOPHMemory* memory, F32 value){
+	CHRISTOPHState* christophState = scast<CHRISTOPHState*>(memory->permanentStorage);
+	ChassisState* state = &christophState->chassisState;
+	state->stepMotorValue = STEP_SPEED * memory->ClampN(value);
 }
 
 void RawDrive(CHRISTOPHMemory* memory, F32 mgntd, F32 curve){

@@ -3,6 +3,8 @@
 
 uul_extern{
 
+void SetStepHammerMotor(CHRISTOPHMemory* memory, F32 value);
+
 /** Mainly used in Autonomous
  * mgntd - forward component of magnitude sent to motors
  * curve - rate of turn, constant for differing forward speeds

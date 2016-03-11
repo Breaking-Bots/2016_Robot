@@ -1,17 +1,15 @@
 
 /* Chassis */
 
-Victor* motors[CHASSIS_NUM_MOTORS];
-Talon* stepMotor;
+VictorSP* motors[CHASSIS_NUM_MOTORS];
+CanTalonSRX* stepMotor;
 Encoder* leftEncoder;
 Encoder* rightEncoder;
 
 void InitializeChassis(){
-	motors[0] = new Victor(CHASSIS_PORT_FL);
-	motors[1] = new Victor(CHASSIS_PORT_BL);
-	motors[2] = new Victor(CHASSIS_PORT_FR);
-	motors[3] = new Victor(CHASSIS_PORT_BR);
-	stepMotor = new Talon(CHASSIS_PORT_ST);
+	motors[0] = new VictorSP(CHASSIS_PORT_L);
+	motors[1] = new VictorSP(CHASSIS_PORT_R);
+	stepMotor = new CanTalonSRX(CHASSIS_PORT_ST);
 	leftEncoder = new Encoder(LEFT_ENCODER_PORT_A, LEFT_ENCODER_PORT_B, 
 				  false, Encoder::EncodingType::k4X);
 	rightEncoder = new Encoder(RIGHT_ENCODER_PORT_A, RIGHT_ENCODER_PORT_B, 
@@ -29,8 +27,6 @@ void UpdateChassis(CHRISTOPHMemory* memory){
 		
 		state->invertedMotors[0] = -1;
 		state->invertedMotors[1] = -1;
-		state->invertedMotors[2] = -1;
-		state->invertedMotors[3] = -1;
 		state->invertedStepMotor = 1;
 		state->reverse = True;
 
@@ -57,9 +53,9 @@ void UpdateChassis(CHRISTOPHMemory* memory){
 	//			 state->motorValues[1], state->motorValues[2], state->motorValues[3]);
 	//Cout("%.4f", state->stepMotorValue * state->invertedStepMotor);
 	SmartDashboard::PutNumber("FLD", state->motorValues[0] * state->invertedMotors[0]);
-	SmartDashboard::PutNumber("BLD", state->motorValues[1] * state->invertedMotors[1]);
-	SmartDashboard::PutNumber("FRD", state->motorValues[2] * state->invertedMotors[2]);
-	SmartDashboard::PutNumber("BRD", state->motorValues[3] * state->invertedMotors[3]);
+	SmartDashboard::PutNumber("BLD", state->motorValues[0] * state->invertedMotors[0]);
+	SmartDashboard::PutNumber("FRD", state->motorValues[1] * state->invertedMotors[1]);
+	SmartDashboard::PutNumber("BRD", state->motorValues[1] * state->invertedMotors[1]);
 	SmartDashboard::PutNumber("STP", state->stepMotorValue * state->invertedStepMotor);
 }
 
@@ -75,18 +71,18 @@ void TerminateChassis(){
 
 /* Shooter */
 
-Talon* outerIntakeMotor;
+CanTalonSRX* outerIntakeMotor;
 Talon* innerLowerIntakeMotor;
-VictorSP* lowerShooterMotor;
+Victor* lowerShooterMotor;
 Talon* innerUpperIntakeMotor;
-VictorSP* upperShooterMotor;
+Victor* upperShooterMotor;
 
 void InitializeShooter(){
-	outerIntakeMotor = new Talon(SHOOTER_PORT_OI);
+	outerIntakeMotor = new CanTalonSRX(SHOOTER_PORT_OI);
 	innerLowerIntakeMotor = new Talon(SHOOTER_PORT_ILI);
-	lowerShooterMotor = new VictorSP(SHOOTER_PORT_LS);
+	lowerShooterMotor = new Victor(SHOOTER_PORT_LS);
 	innerUpperIntakeMotor = new Talon(SHOOTER_PORT_IUI);
-	upperShooterMotor = new VictorSP(SHOOTER_PORT_US);
+	upperShooterMotor = new Victor(SHOOTER_PORT_US);
 	Cout("Shooter Initialized");
 }
 
